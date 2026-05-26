@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 첫 번째 아이디어</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #040d1f;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .container {
+            text-align: center;
+            padding: 4rem 6rem;
+            border-radius: 24px;
+            background: rgba(37, 99, 235, 0.05);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.15);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            transition: all 0.4s ease;
+            cursor: default;
+        }
+
+        .container:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 16px 48px rgba(37, 99, 235, 0.35);
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.4);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeIn 1.5s ease-out;
+            text-shadow: 0 0 30px rgba(37, 99, 235, 0.2);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>내 첫 번째 아이디어</h1>
+    </div>
+</body>
+</html>
