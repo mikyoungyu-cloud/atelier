@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>IB 다이아몬드 랭킹</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+
+        /* 좌측 입력 영역 */
+        .sidebar {
+            width: 340px;
+            padding: 24px;
+            background-color: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #444;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #4f46e5;
+        }
+
+        /* 우측 보드 영역 */
+        .main-board {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            gap: 24px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .topic-display {
+            font-size: 24px;
+            font-weight: 700;
+            min-height: 36px;
+            text-align: center;
+            color: #111827;
+        }
+
+        /* 다이아몬드 그리드 배치 (1 - 3 - 1) */
+        .diamond-container {
+            display: grid;
+            grid-template-columns: repeat(3, 160px);
+            grid-template-rows: repeat(3, 110px);
+            gap: 16px;
+            justify-content: center;
+            align-content: center;
+            margin-top: 10px;
+        }
+
+        .slot-top {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .slot-left {
+            grid-column: 1;
+            grid-row: 2;
+        }
+
+        .slot-center {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .slot-right {
+            grid-column: 3;
+            grid-row: 2;
+        }
+
+        .slot-bottom {
+            grid-column: 2;
+            grid-row: 3;
+        }
+
+        /* 드롭 대상 영역 및 카드 공통 스타일 */
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .drop-zone.dragover {
+            background-color: #e0e7ff;
+            border-color: #4f46e5;
+        }
+
+        /* 카드 대기 영역 */
+        .pool-section {
+            width: 100%;
+            max-width: 600px;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pool-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .card-pool {
+            width: 100%;
+            min-height: 120px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+        }
+
+        /* 드래그 가능한 카드 */
+        .card {
+            width: 140px;
+            height: 90px;
+            background-color: #ffffff;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: grab;
+            user-select: none;
+            word-break: break-word;
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .card.dragging {
+            opacity: 0.4;
+        }
+
+        /* 인쇄 버튼 */
+        .print-btn {
+            position: absolute;
+            top: 24px;
+            right: 30px;
+            padding: 10px 16px;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .print-btn:hover {
+            background-color: #4338ca;
+        }
+
+        /* 인쇄용 스타일 */
+        @media print {
+            .sidebar, .pool-section, .print-btn {
+                display: none !important;
+            }
+            body {
+                background-color: white;
+            }
+            .main-board {
+                padding: 0;
+                justify-content: center;
+                gap: 40px;
+            }
+            .drop-zone {
+                border-color: #cbd5e1;
+            }
+            .card {
+                border-color: #cbd5e1;
+                box-shadow: none;
+            }
+        }
+
+        /* 제출 버튼 및 폼 */
+        .submit-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            z-index: 10;
+        }
+        #student-name {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 2px solid #4f46e5;
+            font-size: 15px;
+            width: 160px;
+            outline: none;
+        }
+        #student-name:focus { box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
+        .submit-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover { background-color: #2563eb; }
+        .submit-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+    </style>
+</head>
+
+<body>
+
+    <aside class="sidebar">
+        <div class="form-group">
+            <label for="input-topic">주제 (Topic)</label>
+            <input type="text" id="input-topic" placeholder="탐구 주제를 입력하세요">
+        </div>
+
+        <div class="form-group">
+            <label>카드 목록 (5개)</label>
+            <input type="text" class="input-card" data-index="0" placeholder="1번 카드 내용">
+            <input type="text" class="input-card" data-index="1" placeholder="2번 카드 내용">
+            <input type="text" class="input-card" data-index="2" placeholder="3번 카드 내용">
+            <input type="text" class="input-card" data-index="3" placeholder="4번 카드 내용">
+            <input type="text" class="input-card" data-index="4" placeholder="5번 카드 내용">
+        </div>
+    </aside>
+
+    <main class="main-board">
+        <button class="print-btn" onclick="window.print()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            인쇄하기
+        </button>
+        <div class="topic-display" id="display-topic">주제를 입력하세요</div>
+
+        <div class="diamond-container">
+            <div class="drop-zone slot-top" data-zone="diamond"></div>
+            <div class="drop-zone slot-left" data-zone="diamond"></div>
+            <div class="drop-zone slot-center" data-zone="diamond"></div>
+            <div class="drop-zone slot-right" data-zone="diamond"></div>
+            <div class="drop-zone slot-bottom" data-zone="diamond"></div>
+        </div>
+
+        <div class="pool-section">
+            <span class="pool-label">생성된 카드 목록 (다이아몬드로 드래그하세요)</span>
+            <div class="card-pool drop-zone" id="card-pool" data-zone="pool"></div>
+        </div>
+
+        <div class="submit-section">
+            <input type="text" id="student-name" placeholder="이름을 입력하세요">
+            <button class="submit-btn" id="btn-submit">선생님께 제출하기 🚀</button>
+        </div>
+    </main>
+
+    <script>
+        const topicInput = document.getElementById('input-topic');
+        const topicDisplay = document.getElementById('display-topic');
+        const cardInputs = document.querySelectorAll('.input-card');
+        const cardPool = document.getElementById('card-pool');
+        const dropZones = document.querySelectorAll('.drop-zone');
+
+        // 1. 주제 실시간 연동
+        topicInput.addEventListener('input', (e) => {
+            topicDisplay.textContent = e.target.value.trim() || '주제를 입력하세요';
+        });
+
+        // 2. 카드 요소 생성 및 관리 (5개 고정)
+        const cards = Array.from({ length: 5 }, (_, i) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.draggable = true;
+            card.id = `card-${i}`;
+            card.textContent = `카드 ${i + 1}`;
+            card.style.order = i; // 항상 번호순으로 시각적 정렬 유지
+
+            card.addEventListener('dragstart', handleDragStart);
+            card.addEventListener('dragend', handleDragEnd);
+
+            cardPool.appendChild(card);
+            return card;
+        });
+
+        // 3. 카드 텍스트 실시간 반영
+        cardInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                const index = e.target.dataset.index;
+                const text = e.target.value.trim();
+                cards[index].textContent = text || `카드 ${Number(index) + 1}`;
+            });
+        });
+
+        // 4. HTML5 드래그 앤 드롭 로직
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.id);
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+            draggedElement = null;
+        }
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+
+                if (!draggedElement) return;
+
+                // 다이아몬드 칸에는 카드 1장만 배치 허용 (기존 카드는 대기열로 이동)
+                if (zone.dataset.zone === 'diamond') {
+                    if (zone.children.length > 0 && zone.firstElementChild !== draggedElement) {
+                        cardPool.appendChild(zone.firstElementChild);
+                    }
+                    zone.appendChild(draggedElement);
+                } else {
+                    // 하단 카드 보관함은 다중 허용
+                    zone.appendChild(draggedElement);
+                }
+            });
+        });
+
+        // 5. 제출하기 기능 (REST API 방식)
+        document.getElementById('btn-submit').addEventListener('click', async () => {
+            const name = document.getElementById('student-name').value.trim();
+            const topicVal = document.getElementById('input-topic').value.trim() || '주제 없음';
+            const cardPoolContainer = document.getElementById('card-pool');
+            
+            if (!name) {
+                alert("선생님께 제출하기 전에 이름을 꼭 적어주세요!");
+                return;
+            }
+            if (cardPoolContainer.children.length > 0) {
+                alert("모든 카드를 다이아몬드 칸에 배치한 후 제출해주세요!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit');
+            btn.textContent = "제출 중... ⏳";
+            btn.disabled = true;
+
+            try {
+                const topCard = document.querySelector('.slot-top').textContent;
+                const leftCard = document.querySelector('.slot-left').textContent;
+                const centerCard = document.querySelector('.slot-center').textContent;
+                const rightCard = document.querySelector('.slot-right').textContent;
+                const bottomCard = document.querySelector('.slot-bottom').textContent;
+
+                const projectId = "diamond-ranking";
+                const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/results`;
+                
+                const payload = {
+                    fields: {
+                        studentName: { stringValue: name },
+                        topic: { stringValue: topicVal + " (고학년)" },
+                        top: { stringValue: topCard },
+                        left: { stringValue: leftCard },
+                        center: { stringValue: centerCard },
+                        right: { stringValue: rightCard },
+                        bottom: { stringValue: bottomCard },
+                        createdAt: { timestampValue: new Date().toISOString() }
+                    }
+                };
+
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error ? errorData.error.message : "서버 거부 (데이터베이스 규칙 만료 등)");
+                }
+
+                alert("🎉 성공적으로 제출되었습니다! 선생님께서 결과를 확인하실 거예요.");
+                btn.textContent = "제출 완료 ✅";
+            } catch (error) {
+                console.error("업로드 에러: ", error);
+                alert("제출 중 오류가 발생했습니다: " + error.message);
+                btn.textContent = "선생님께 제출하기 🚀";
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

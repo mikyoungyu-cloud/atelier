@@ -3,65 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>내 첫 번째 아이디어</title>
+    <title>다이아몬드 랭킹 시작하기</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700&display=swap');
 
         body, html {
             height: 100%;
             margin: 0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: #040d1f;
-            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%);
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            color: #1e293b;
         }
 
-        .container {
-            text-align: center;
-            padding: 4rem 6rem;
-            border-radius: 24px;
-            background: rgba(37, 99, 235, 0.05);
-            backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px rgba(37, 99, 235, 0.15);
-            border: 1px solid rgba(37, 99, 235, 0.2);
-            transition: all 0.4s ease;
-            cursor: default;
-        }
-
-        .container:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 16px 48px rgba(37, 99, 235, 0.35);
-            background: rgba(37, 99, 235, 0.1);
-            border: 1px solid rgba(37, 99, 235, 0.4);
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 6rem;
+        .header-title {
+            font-size: 3rem;
             font-weight: 700;
-            background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: fadeIn 1.5s ease-out;
-            text-shadow: 0 0 30px rgba(37, 99, 235, 0.2);
+            margin-bottom: 3rem;
+            color: #0f172a;
+            text-align: center;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            animation: fadeInDown 0.8s ease-out;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .card-container {
+            display: flex;
+            gap: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .choice-card {
+            width: 280px;
+            height: 320px;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%);
+            z-index: 1;
+        }
+
+        .choice-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .choice-card:active {
+            transform: translateY(-4px);
+        }
+
+        .card-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            z-index: 2;
+            transition: transform 0.4s ease;
+        }
+
+        .choice-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-title {
+            font-size: 2rem;
+            font-weight: 700;
+            z-index: 2;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-desc {
+            font-size: 1.1rem;
+            color: #64748b;
+            z-index: 2;
+        }
+
+        /* Color variants */
+        .senior-card:hover .card-title {
+            color: #2563eb;
+        }
+        
+        .junior-card:hover .card-title {
+            color: #16a34a;
+        }
+
+        .results-link {
+            margin-top: 3rem;
+            padding: 12px 24px;
+            background: white;
+            color: #3b82f6;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        .results-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>내 첫 번째 아이디어</h1>
+
+    <h1 class="header-title">다이아몬드 랭킹</h1>
+
+    <div class="card-container">
+        <!-- 저학년용 카드 -->
+        <a href="다이아몬드 랭킹_저학년.html" class="choice-card junior-card">
+            <div class="card-icon">🌱</div>
+            <div class="card-title">저학년용</div>
+            <div class="card-desc">쉽고 재미있게!</div>
+        </a>
+
+        <!-- 고학년용 카드 (기존 활동 연결) -->
+        <a href="다이아몬드 랭킹.html" class="choice-card senior-card">
+            <div class="card-icon">🎓</div>
+            <div class="card-title">고학년용</div>
+            <div class="card-desc">깊이 있는 탐구!</div>
+        </a>
     </div>
+
+    <!-- 교사용 결과 확인 버튼 추가 -->
+    <a href="교사용_결과확인.html" class="results-link">📊 선생님 전용: 제출된 결과 확인하기</a>
+
 </body>
 </html>

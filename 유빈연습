@@ -1,0 +1,18 @@
+from gtts import gTTS
+
+# 학생이 따라하기 좋도록 문장 간에 충분한 공백/쉼표를 준 스크립트
+script = """
+I want to go to Paris, France.
+First, I am going to go to the Eiffel Tower.
+I'm going to walk around the Eiffel Tower, and take a cruise, too.
+Second, I am going to visit the Louvre Museum.
+I'm going to see some artwork.
+Lastly, I'm going to go to the Arc de Triomphe.
+I'm going shopping. I will eat some bread.
+I'm going to buy and eat things like macarons and baguettes.
+"""
+
+# slow=True로 설정하면 더 또박또박 천천히 읽어줍니다 (평가 준비 시 추천)
+tts = gTTS(text=script, lang='en', tld='com', slow=False)
+tts.save("Paris_Speaking_Practice.mp3")
+print("MP3 파일 생성이 완료되었습니다!")

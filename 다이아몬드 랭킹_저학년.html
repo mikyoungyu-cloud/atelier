@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>저학년용 다이아몬드 랭킹</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            background-color: #f0fdf4; /* 저학년 느낌의 부드러운 초록빛 배경 */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 캡처할 때 둥근 테두리 등이 짤리지 않게 패딩 제공 */
+        #capture-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            padding: 20px;
+            background-color: #f0fdf4;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        /* ---------------- 교사 모드 스타일 ---------------- */
+        #teacher-mode {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 500px;
+            display: flex; /* 자바스크립트에서 켜고 끔 */
+            flex-direction: column;
+            gap: 20px;
+        }
+        #teacher-mode h2 {
+            text-align: center;
+            color: #16a34a;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #444;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: #16a34a;
+        }
+        .btn-generate {
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn-generate:hover {
+            background-color: #15803d;
+        }
+        .share-result {
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px dashed #cbd5e1;
+        }
+        .share-link-input {
+            background: white;
+        }
+        .btn-copy {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .btn-copy:hover {
+            background-color: #2563eb;
+        }
+
+        /* ---------------- 학생 모드 스타일 ---------------- */
+        #student-mode {
+            width: 100%;
+            height: 100%;
+            display: none; /* 자바스크립트에서 켜고 끔 */
+            flex-direction: column;
+            align-items: center;
+            padding: 30px;
+            gap: 24px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .topic-display {
+            font-size: 28px;
+            font-weight: 700;
+            min-height: 36px;
+            text-align: center;
+            color: #111827;
+            background: white;
+            padding: 15px 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border: 2px solid #16a34a;
+        }
+
+        /* 다이아몬드 그리드 배치 (1 - 3 - 1) */
+        .diamond-container {
+            display: grid;
+            grid-template-columns: repeat(3, 160px);
+            grid-template-rows: repeat(3, 110px);
+            gap: 16px;
+            justify-content: center;
+            align-content: center;
+            margin-top: 10px;
+        }
+
+        .slot-top { grid-column: 2; grid-row: 1; }
+        .slot-left { grid-column: 1; grid-row: 2; }
+        .slot-center { grid-column: 2; grid-row: 2; }
+        .slot-right { grid-column: 3; grid-row: 2; }
+        .slot-bottom { grid-column: 2; grid-row: 3; }
+
+        .drop-zone {
+            border: 3px dashed #cbd5e1;
+            border-radius: 12px;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .drop-zone.dragover {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+            transform: scale(1.02);
+        }
+
+        .pool-section {
+            width: 100%;
+            max-width: 800px;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .pool-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #64748b;
+        }
+        .card-pool {
+            width: 100%;
+            min-height: 130px;
+            border: 3px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+        }
+
+        /* 학생용 크고 귀여운 카드 */
+        .card {
+            width: 140px;
+            height: 90px;
+            background-color: #ffffff;
+            border: 2px solid #16a34a;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: grab;
+            user-select: none;
+            word-break: break-word;
+            transition: transform 0.1s;
+        }
+        .card:active { cursor: grabbing; transform: scale(0.95); }
+        .card.dragging { opacity: 0.5; }
+
+        /* 인쇄 버튼 */
+        .print-btn {
+            position: absolute;
+            top: 24px;
+            right: 30px;
+            padding: 12px 20px;
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .print-btn:hover { background-color: #15803d; }
+
+        /* 제출 버튼 및 폼 */
+        .submit-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            z-index: 10;
+        }
+        #student-name {
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 2px solid #16a34a;
+            font-size: 15px;
+            width: 160px;
+            outline: none;
+        }
+        #student-name:focus { box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2); }
+        .submit-btn {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s;
+        }
+        .submit-btn:hover { background-color: #2563eb; }
+        .submit-btn:disabled { background-color: #94a3b8; cursor: not-allowed; }
+
+        /* 인쇄용 스타일 */
+        @media print {
+            .pool-section, .print-btn { display: none !important; }
+            body { background-color: white; }
+            #student-mode { padding: 0; justify-content: center; gap: 40px; }
+            .topic-display { border-color: #333; box-shadow: none; }
+            .drop-zone { border-color: #cbd5e1; }
+            .card { border-color: #cbd5e1; box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. 교사 모드 화면 -->
+    <div id="teacher-mode" style="display: none;">
+        <h2>🌱 교사용: 활동 만들기</h2>
+        <p style="text-align:center; color:#64748b; font-size:13px; margin-bottom:10px;">
+            주제와 카드를 입력하고 링크를 생성해 학생들에게 공유하세요.
+        </p>
+
+        <div class="form-group">
+            <label>탐구 주제 (Topic)</label>
+            <input type="text" id="t-topic" placeholder="예: 내가 가장 좋아하는 과일">
+        </div>
+
+        <div class="form-group">
+            <label>카드 내용 (5개)</label>
+            <input type="text" id="t-c1" placeholder="1번 카드">
+            <input type="text" id="t-c2" placeholder="2번 카드">
+            <input type="text" id="t-c3" placeholder="3번 카드">
+            <input type="text" id="t-c4" placeholder="4번 카드">
+            <input type="text" id="t-c5" placeholder="5번 카드">
+        </div>
+
+        <button class="btn-generate" onclick="generateLink()">🔗 학생용 공유 링크 생성하기</button>
+
+        <div class="share-result" id="share-result">
+            <label style="color:#2563eb;">공유 링크가 생성되었습니다!</label>
+            <input type="text" id="share-url" class="share-link-input" readonly>
+            <button class="btn-copy" onclick="copyLink()">📋 링크 복사하기</button>
+            <a href="index.html" style="text-align:center; margin-top:10px; color:#64748b; font-size:13px; text-decoration:none;">← 처음으로 돌아가기</a>
+        </div>
+    </div>
+
+
+    <!-- 2. 학생 모드 화면 -->
+    <div id="student-mode" style="display: none;">
+        <button class="print-btn" onclick="window.print()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            인쇄하기
+        </button>
+        
+        <!-- 캡처될 주요 영역 (주제 + 다이아몬드 보드) -->
+        <div id="capture-area">
+            <div class="topic-display" id="display-topic">주제</div>
+
+            <div class="diamond-container">
+                <div class="drop-zone slot-top" data-zone="diamond"></div>
+                <div class="drop-zone slot-left" data-zone="diamond"></div>
+                <div class="drop-zone slot-center" data-zone="diamond"></div>
+                <div class="drop-zone slot-right" data-zone="diamond"></div>
+                <div class="drop-zone slot-bottom" data-zone="diamond"></div>
+            </div>
+        </div>
+
+        <!-- 하단 보관함 (여기는 캡처 제외) -->
+        <div class="pool-section" id="pool-area">
+            <span class="pool-label">선생님이 주신 카드를 위쪽 다이아몬드 칸으로 끌어다 놓으세요! 👇</span>
+            <div class="card-pool drop-zone" id="card-pool" data-zone="pool"></div>
+        </div>
+
+        <div class="submit-section">
+            <input type="text" id="student-name" placeholder="이름을 입력하세요">
+            <button class="submit-btn" id="btn-submit">선생님께 제출하기 🚀</button>
+        </div>
+    </div>
+
+
+    <!-- HTML2Canvas (화면 캡처 라이브러리) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Firebase SDK (안정적인 v8 버전으로 변경) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAizZc3QFRlDLnvfEMECJ_eTfNZxbOQo8",
+            authDomain: "diamond-ranking.firebaseapp.com",
+            projectId: "diamond-ranking",
+            storageBucket: "diamond-ranking.firebasestorage.app",
+            messagingSenderId: "539683715485",
+            appId: "1:539683715485:web:c3b57cad1a61dd811c1774"
+        };
+
+        // Firebase 초기화
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const topicParam = urlParams.get('topic');
+        
+        const teacherMode = document.getElementById('teacher-mode');
+        const studentMode = document.getElementById('student-mode');
+
+        if (topicParam) {
+            // ================== 학생 모드 ==================
+            studentMode.style.display = 'flex';
+            
+            // 1. 텍스트 설정
+            document.getElementById('display-topic').textContent = topicParam;
+            
+            const cardTexts = [
+                urlParams.get('c1') || '카드 1',
+                urlParams.get('c2') || '카드 2',
+                urlParams.get('c3') || '카드 3',
+                urlParams.get('c4') || '카드 4',
+                urlParams.get('c5') || '카드 5'
+            ];
+
+            const cardPool = document.getElementById('card-pool');
+            const dropZones = document.querySelectorAll('.drop-zone');
+            
+            // 2. 카드 생성
+            const cards = cardTexts.map((text, i) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.draggable = true;
+                card.id = `card-${i}`;
+                card.textContent = text;
+                card.style.order = i; 
+
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+
+                cardPool.appendChild(card);
+                return card;
+            });
+
+            // 3. 드래그 앤 드롭 로직
+            let draggedElement = null;
+
+            function handleDragStart(e) {
+                draggedElement = this;
+                this.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', this.id);
+            }
+
+            function handleDragEnd() {
+                this.classList.remove('dragging');
+                draggedElement = null;
+            }
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    zone.classList.add('dragover');
+                });
+
+                zone.addEventListener('dragleave', () => {
+                    zone.classList.remove('dragover');
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.classList.remove('dragover');
+
+                    if (!draggedElement) return;
+
+                    if (zone.dataset.zone === 'diamond') {
+                        if (zone.children.length > 0 && zone.firstElementChild !== draggedElement) {
+                            cardPool.appendChild(zone.firstElementChild);
+                        }
+                        zone.appendChild(draggedElement);
+                    } else {
+                        zone.appendChild(draggedElement);
+                    }
+                });
+            });
+
+            // 4. 제출하기 버튼 로직 (Firebase 연동)
+            document.getElementById('btn-submit').addEventListener('click', async () => {
+                const name = document.getElementById('student-name').value.trim();
+                const cardPool = document.getElementById('card-pool');
+                
+                if (!name) {
+                    alert("선생님께 제출하기 전에 이름을 꼭 적어주세요!");
+                    return;
+                }
+                if (cardPool.children.length > 0) {
+                    alert("모든 카드를 다이아몬드 칸에 배치한 후 제출해주세요!");
+                    return;
+                }
+
+                const btn = document.getElementById('btn-submit');
+                btn.textContent = "제출 중... ⏳";
+                btn.disabled = true;
+
+                try {
+                    // 화면 캡처(html2canvas)나 저장소 업로드 시 보안 정책으로 무한 로딩이 걸리는 것을 방지하기 위해,
+                    // 이미지 대신 학생들이 '어떤 칸에 어떤 카드를 넣었는지' 글자 데이터만 전송합니다.
+                    const topCard = document.querySelector('.slot-top').textContent;
+                    const leftCard = document.querySelector('.slot-left').textContent;
+                    const centerCard = document.querySelector('.slot-center').textContent;
+                    const rightCard = document.querySelector('.slot-right').textContent;
+                    const bottomCard = document.querySelector('.slot-bottom').textContent;
+
+                    // 브라우저의 로컬 환경(file:///)에서 Firebase SDK의 웹소켓 통신이 막혀 무한 로딩이 걸리는 고질적인 문제를 피하기 위해,
+                    // Firebase SDK를 거치지 않고 표준 인터넷 통신(REST API)으로 직접 데이터를 쏩니다.
+                    const projectId = firebaseConfig.projectId;
+                    const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/results`;
+                    
+                    const payload = {
+                        fields: {
+                            studentName: { stringValue: name },
+                            topic: { stringValue: topicParam || "주제 없음" },
+                            top: { stringValue: topCard },
+                            left: { stringValue: leftCard },
+                            center: { stringValue: centerCard },
+                            right: { stringValue: rightCard },
+                            bottom: { stringValue: bottomCard },
+                            createdAt: { timestampValue: new Date().toISOString() }
+                        }
+                    };
+
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error ? errorData.error.message : "서버 거부 (데이터베이스 규칙 만료 등)");
+                    }
+
+                    alert("🎉 성공적으로 제출되었습니다! 선생님께서 결과를 확인하실 거예요.");
+                    
+                    // 제출 완료 후 버튼 상태 변경
+                    btn.textContent = "제출 완료 ✅";
+                } catch (error) {
+                    console.error("업로드 에러: ", error);
+                    alert("제출 중 오류가 발생했습니다: " + error.message);
+                    btn.textContent = "선생님께 제출하기 🚀";
+                    btn.disabled = false;
+                }
+            });
+
+        } else {
+            // ================== 교사 모드 ==================
+            teacherMode.style.display = 'flex';
+        }
+
+        // 교사 모드 링크 생성 기능은 전역 함수로 설정해두어야 html 속성의 onclick에서 호출 가능
+        window.generateLink = function() {
+            const tTopic = document.getElementById('t-topic').value.trim();
+            const tC1 = document.getElementById('t-c1').value.trim();
+            const tC2 = document.getElementById('t-c2').value.trim();
+            const tC3 = document.getElementById('t-c3').value.trim();
+            const tC4 = document.getElementById('t-c4').value.trim();
+            const tC5 = document.getElementById('t-c5').value.trim();
+
+            if (!tTopic || !tC1 || !tC2 || !tC3 || !tC4 || !tC5) {
+                alert("주제와 5개의 카드를 모두 입력해주세요!");
+                return;
+            }
+
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('topic', tTopic);
+            newUrl.searchParams.set('c1', tC1);
+            newUrl.searchParams.set('c2', tC2);
+            newUrl.searchParams.set('c3', tC3);
+            newUrl.searchParams.set('c4', tC4);
+            newUrl.searchParams.set('c5', tC5);
+
+            document.getElementById('share-url').value = newUrl.toString();
+            document.getElementById('share-result').style.display = 'flex';
+        }
+
+        window.copyLink = function() {
+            const urlInput = document.getElementById('share-url');
+            urlInput.select();
+            document.execCommand('copy');
+            alert('학생용 링크가 복사되었습니다! 메신저나 게시판에 붙여넣기 해주세요.');
+        }
+    </script>
+</body>
+</html>

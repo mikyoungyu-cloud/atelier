@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>문맥 어휘 탐정단 - 학년별 어휘 추리 게임</title>
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --text: #1E293B;
+      --clue-bg: #FEF08A;
+      --clue-border: #F59E0B;
+      --target-word: #3B82F6;
+      --success: #10B981;
+      --danger: #EF4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', 'Nanum Gothic', sans-serif;
+      word-break: keep-all;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+      line-height: 1.7;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 28px;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid #E2E8F0;
+    }
+
+    /* 화면 전환 제어 */
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+    }
+
+    /* 인트로 화면 스타일 */
+    .intro-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .intro-header h1 {
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin-top: 8px;
+    }
+
+    .intro-desc {
+      color: #64748B;
+      font-size: 1rem;
+      margin-top: 6px;
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .level-btn {
+      background: #FFFFFF;
+      border: 2px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 18px 20px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .level-btn:hover {
+      border-color: var(--primary);
+      background-color: #EEF2FF;
+      transform: translateY(-2px);
+    }
+
+    .level-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .level-subtitle {
+      font-size: 0.9rem;
+      color: #64748B;
+      margin-top: 4px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      padding: 12px;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      flex: 1;
+      min-width: 0;
+    }
+    input:focus {
+      border-color: var(--primary);
+    }
+    .student-info-display {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 10px;
+      margin-bottom: 16px;
+      text-align: center;
+      background: #EEF2FF;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    /* 퀴즈 화면 스타일 */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .badge {
+      background-color: #EEF2FF;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 6px 14px;
+      border-radius: 9999px;
+    }
+
+    .score-box {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .passage-box {
+      background: #F8FAFC;
+      border: 2px dashed #CBD5E1;
+      border-radius: 14px;
+      padding: 20px;
+      font-size: 1.25rem;
+      line-height: 2.1;
+      margin: 16px 0;
+      font-weight: 600;
+    }
+
+    .target-word {
+      background-color: #DBEAFE;
+      color: #1E40AF;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 800;
+      border-bottom: 3px solid var(--target-word);
+    }
+
+    .clue {
+      background-color: var(--clue-bg);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border-bottom: 2px dashed var(--clue-border);
+      transition: all 0.3s ease;
+    }
+
+    .clue-hidden {
+      background-color: transparent;
+      border-bottom: none;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      outline: none;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-radius: 12px;
+      padding: 12px 20px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-clue {
+      background-color: #FEF3C7;
+      color: #92400E;
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .btn-clue:hover {
+      background-color: #FDE68A;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .option-btn {
+      text-align: left;
+      background-color: #FFFFFF;
+      border: 2px solid #E2E8F0;
+      padding: 14px 18px;
+      border-radius: 14px;
+      font-size: 1.1rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .option-btn:hover:not([disabled]) {
+      border-color: var(--primary);
+      background-color: #EEF2FF;
+    }
+
+    .option-btn.correct {
+      border-color: var(--success);
+      background-color: #ECFDF5;
+      color: #065F46;
+    }
+
+    .option-btn.wrong {
+      border-color: var(--danger);
+      background-color: #FEF2F2;
+      color: #991B1B;
+    }
+
+    .feedback-box {
+      margin-top: 20px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      display: none;
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+
+    .feedback-box.show {
+      display: block;
+    }
+
+    .feedback-success {
+      background-color: #ECFDF5;
+      border-left: 5px solid var(--success);
+      color: #065F46;
+    }
+
+    .feedback-error {
+      background-color: #FEF2F2;
+      border-left: 5px solid var(--danger);
+      color: #991B1B;
+    }
+
+    .footer-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    /* 종합 결과 화면 스타일 */
+    .result-container {
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .result-badge {
+      font-size: 3rem;
+      margin-bottom: 10px;
+    }
+
+    .result-score {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 14px;
+    }
+
+    .report-card {
+      text-align: left;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px 0;
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+
+    .report-card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 10px;
+      color: #334155;
+    }
+
+    .report-item {
+      padding: 10px 0;
+      border-bottom: 1px dashed #CBD5E1;
+    }
+
+    .report-item:last-child {
+      border-bottom: none;
+    }
+
+    /* 인쇄용 스타일 */
+    @media print {
+      body {
+        background-color: white;
+        padding: 0;
+      }
+      .container {
+        max-width: 100%;
+        gap: 0;
+      }
+      .card {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+      }
+      button {
+        display: none !important;
+      }
+      .result-badge {
+        font-size: 2rem;
+      }
+      .report-card {
+        border: 2px solid #000;
+        background: transparent;
+        margin-top: 20px;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- 0. 로그인 화면 (학생 정보 입력) -->
+    <div id="login-screen" class="screen active card">
+      <div class="intro-header">
+        <span class="badge">🔍 탐정 훈련소</span>
+        <h1>문맥 어휘 탐정단</h1>
+        <p class="intro-desc">탐정 수첩에 요원 정보를 입력해 주세요!</p>
+      </div>
+
+      <div class="input-group">
+        <div class="input-row">
+          <input type="text" id="input-grade" placeholder="학년">
+          <input type="text" id="input-class" placeholder="반">
+          <input type="text" id="input-number" placeholder="번호">
+        </div>
+        <input type="text" id="input-name" placeholder="이름을 입력하세요">
+      </div>
+
+      <button class="btn-primary" style="width: 100%;" onclick="startLogin()">탐정 훈련 시작하기 ➔</button>
+    </div>
+
+    <!-- 1. 인트로 화면 (난이도 선택) -->
+    <div id="intro-screen" class="screen card">
+      <div class="intro-header">
+        <span class="badge">🔍 탐정 훈련소</span>
+        <h1>문맥 어휘 탐정단</h1>
+        <p class="intro-desc">글 속 숨겨진 단서를 찾아 낱말의 진짜 뜻을 밝혀보세요!</p>
+      </div>
+
+      <div class="level-grid">
+        <div class="level-btn" onclick="startGame('easy')">
+          <div>
+            <div class="level-title">🌱 초급 (초등 1~2학년)</div>
+            <div class="level-subtitle">그림 같은 일상 표현과 재미있는 흉내말 추리</div>
+          </div>
+          <span style="font-size: 1.4rem;">➔</span>
+        </div>
+
+        <div class="level-btn" onclick="startGame('medium')">
+          <div>
+            <div class="level-title">🌿 중급 (초등 3~4학년)</div>
+            <div class="level-subtitle">다양한 상황 표현과 문맥 속 감정·행동 추리</div>
+          </div>
+          <span style="font-size: 1.4rem;">➔</span>
+        </div>
+
+        <div class="level-btn" onclick="startGame('hard')">
+          <div>
+            <div class="level-title">🌳 고급 (초등 5~6학년)</div>
+            <div class="level-subtitle">논리적 맥락, 대조 및 관용적·한자 어휘 추리</div>
+          </div>
+          <span style="font-size: 1.4rem;">➔</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 퀴즈 풀이 화면 -->
+    <div id="quiz-screen" class="screen card">
+      <header>
+        <span class="badge" id="level-badge">초급 탐정</span>
+        <div class="score-box">
+          사건 <span id="current-q">1</span> / <span id="total-q">3</span>
+        </div>
+      </header>
+
+      <div style="font-weight: 700; font-size: 1.1rem;">📖 사건 지문</div>
+      <div class="passage-box" id="passage-container"></div>
+
+      <button class="btn-clue" onclick="toggleClue()">
+        💡 탐정 돋보기 (문맥 단서 보기)
+      </button>
+
+      <div style="font-weight: 700; font-size: 1.1rem; margin-top: 10px;">
+        🎯 밑줄 친 낱말의 알맞은 뜻을 골라보세요:
+      </div>
+
+      <div class="options-grid" id="options-container"></div>
+
+      <div id="feedback" class="feedback-box"></div>
+
+      <div class="footer-actions">
+        <button id="next-btn" class="btn-primary" style="display: none;" onclick="nextQuestion()">
+          다음 사건으로 ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. 전송 완료 화면 (학생용) -->
+    <div id="result-screen" class="screen card">
+      <div class="result-container">
+        <div class="result-badge" id="result-icon">💌</div>
+        <h2 style="font-size: 1.6rem; margin-bottom: 6px;">탐정 훈련 완료!</h2>
+        <div class="student-info-display" id="student-info-text"></div>
+        
+        <div class="report-card" style="text-align: center; border: 2px dashed #CBD5E1; padding: 30px;">
+          <h3 style="color: #10B981; margin-bottom: 0;">🎉 수고하셨습니다!</h3>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-direction: column; margin-top: 20px;">
+          <button id="restart-btn" class="btn-primary" onclick="restartGame()" style="width: 100%;">
+            처음으로 돌아가기 🔄
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const database = {
+      easy: {
+        title: "초급 (1~2학년)",
+        questions: [
+          {
+            id: 1,
+            targetWord: "다정하게",
+            passage: "넘어진 동생이 울고 있었어요. 민수는 손을 잡고 눈물을 닦아 주며 {target} 말을 건넸어요. \"괜찮아? 형이 도와줄게.\"",
+            clues: ["손을 잡고 눈물을 닦아 주며", "형이 도와줄게"],
+            options: [
+              { text: "따뜻하고 친절한 마음으로", isCorrect: true },
+              { text: "엄청 무섭고 큰 소리로", isCorrect: false },
+              { text: "몹시 화가 난 표정으로", isCorrect: false }
+            ],
+            explanation: "울고 있는 동생을 위로하며 다독여 주는 모습에서 따뜻하고 친절한 마음씨를 알 수 있어요."
+          },
+          {
+            id: 2,
+            targetWord: "헐레벌떡",
+            passage: "학교 종이 치기 직전이었어요. 영희는 지각할까 봐 책가방을 메고 {target} 교실로 뛰어 들어왔어요. 숨이 차서 헉헉거렸어요.",
+            clues: ["지각할까 봐", "뛰어 들어왔어요", "숨이 차서 헉헉거렸어요"],
+            options: [
+              { text: "매우 급하게 서두르는 모양", isCorrect: true },
+              { text: "천천히 노래를 부르는 모양", isCorrect: false },
+              { text: "의자에 앉아 조는 모양", isCorrect: false }
+            ],
+            explanation: "종이 치기 전 급하게 교실로 달려와 숨을 헉헉거리는 모습에서 몹시 서두름을 알 수 있어요."
+          },
+          {
+            id: 3,
+            targetWord: "갸우뚱",
+            passage: "어려운 수수께끼를 들은 지우는 정답을 잘 몰랐어요. 고개를 {target} 하더니 곰곰이 생각에 빠졌어요.",
+            clues: ["정답을 잘 몰랐어요", "곰곰이 생각에 빠졌어요"],
+            options: [
+              { text: "잘 몰라서 고개를 옆으로 기울이는 모양", isCorrect: true },
+              { text: "신나서 높이 뛰어오르는 모양", isCorrect: false },
+              { text: "기뻐서 손뼉을 치는 모양", isCorrect: false }
+            ],
+            explanation: "정답을 잘 모를 때 골똘히 생각하며 고개를 살짝 옆으로 기울이는 모습을 뜻해요."
+          }
+        ]
+      },
+      medium: {
+        title: "중급 (3~4학년)",
+        questions: [
+          {
+            id: 1,
+            targetWord: "실마리",
+            passage: "오랫동안 풀리지 않던 교실 도난 사건의 {target}이/가 드디어 발견되었습니다. 바닥에 떨어진 이름표가 범인을 찾는 결정적 단서가 되었습니다.",
+            clues: ["오랫동안 풀리지 않던", "결정적 단서"],
+            options: [
+              { text: "어떤 사건이나 문제를 풀어 나갈 수 있는 첫 단서", isCorrect: true },
+              { text: "옷을 만들 때 사용하는 가느다란 실", isCorrect: false },
+              { text: "친구와 다투고 나서 느끼는 미안한 감정", isCorrect: false },
+              { text: "모든 일이 완벽하게 끝난 결과", isCorrect: false }
+            ],
+            explanation: "'오랫동안 풀리지 않던 일'과 '결정적 단서'라는 표현을 통해 문제 해결의 시작점이 되는 계기임을 알 수 있어요."
+          },
+          {
+            id: 2,
+            targetWord: "머뭇거렸다",
+            passage: "유리창을 깬 준호는 사실대로 고백해야 할지 두려워서 교무실 문앞에서 한참을 {target}. 손잡이를 잡았다 놓기를 반복했습니다.",
+            clues: ["두려워서", "한참을", "잡았다 놓기를 반복했습니다"],
+            options: [
+              { text: "결정하지 못하고 망설이다", isCorrect: true },
+              { text: "신이 나서 펄쩍펄쩍 뛰다", isCorrect: false },
+              { text: "용기 있게 큰 소리로 외치다", isCorrect: false },
+              { text: "조용히 뒤로 돌아 도망치다", isCorrect: false }
+            ],
+            explanation: "두려운 마음에 선뜻 문을 열지 못하고 손잡이를 잡았다 놓는 행동은 '망설이는 태도'를 보여줍니다."
+          },
+          {
+            id: 3,
+            targetWord: "기색",
+            passage: "밤새 열이 펄펄 끓던 동생은 다행히 아침이 되자 열이 내리고 밝은 표정으로 밥을 먹었습니다. 아픈 {target}이/가 싹 사라졌습니다.",
+            clues: ["열이 내리고", "밝은 표정으로 밥을 먹었습니다", "싹 사라졌습니다"],
+            options: [
+              { text: "마음이나 상태가 겉으로 드러나는 모습", isCorrect: true },
+              { text: "몸에서 땀이 나는 증상", isCorrect: false },
+              { text: "날씨가 맑아지는 현상", isCorrect: false },
+              { text: "목소리가 밖으로 울리는 소리", isCorrect: false }
+            ],
+            explanation: "열이 내리고 밝게 밥을 먹는 겉모습을 보아 아픈 흔적이나 표정(상태)이 사라졌음을 뜻합니다."
+          }
+        ]
+      },
+      hard: {
+        title: "고급 (5~6학년)",
+        questions: [
+          {
+            id: 1,
+            targetWord: "무안했다",
+            passage: "민우는 자신만만하게 큰 소리로 정답을 발표했지만, 선생님의 설명을 듣고 오답임을 깨달았다. 친구들의 시선이 쏠리자 얼굴이 붉어지며 몹시 {target} 민우는 조용히 시선을 내렸다.",
+            clues: ["오답임을 깨달았다", "얼굴이 붉어지며", "조용히 시선을 내렸다"],
+            options: [
+              { text: "부끄럽고 낯이 뜨거웠다", isCorrect: true },
+              { text: "가슴이 벅차고 자랑스러웠다", isCorrect: false },
+              { text: "상대방에 대한 분노가 치밀었다", isCorrect: false },
+              { text: "긴장이 풀려 지치고 나른했다", isCorrect: false }
+            ],
+            explanation: "'오답을 발표함', '얼굴이 붉어짐', '시선을 내림'이라는 단서들을 종합할 때 부끄러움을 느끼는 감정 상태임을 추론할 수 있습니다."
+          },
+          {
+            id: 2,
+            targetWord: "넉넉지",
+            passage: "수호네 가족은 형편이 {target} 않았지만, 주말마다 무료 급식소를 찾아 봉사활동을 펼치며 소외된 이웃과 따뜻한 온정을 나누었습니다.",
+            clues: ["형편이", "무료 급식소를 찾아", "소외된 이웃과 따뜻한 온정을 나누었습니다"],
+            options: [
+              { text: "살림살이나 재정이 풍족하지", isCorrect: true },
+              { text: "신체 건강 상태가 온전하지", isCorrect: false },
+              { text: "여유 시간이 충분하지", isCorrect: false },
+              { text: "학업 역량이 뛰어나지", isCorrect: false }
+            ],
+            explanation: "'형편'이라는 단어와 '그럼에도 불구하고 나눔을 실천했다'는 역접의 맥락에서 경제적 살림살이가 여유롭지 않음을 알 수 있습니다."
+          },
+          {
+            id: 3,
+            targetWord: "안간힘",
+            passage: "가파른 비탈길에서 무거운 손수레를 밀던 노인은 손마디가 하얘지도록 {target}을/를 썼습니다. 마침 지나가던 청년이 그 모습을 보고 뒤에서 힘을 보탰습니다.",
+            clues: ["가파른 비탈길", "무거운 손수레", "손마디가 하얘지도록"],
+            options: [
+              { text: "어떤 일을 해내려고 극한까지 쏟는 온 힘", isCorrect: true },
+              { text: "위기 상황을 모면하기 위해 꾸며낸 꾀", isCorrect: false },
+              { text: "다른 사람을 도와주려는 이타적인 마음", isCorrect: false },
+              { text: "목적지에 빠르게 도달하기 위한 빠른 걸음", isCorrect: false }
+            ],
+            explanation: "'손마디가 하얘질 만큼' 무거운 짐을 옮기기 위해 가진 힘을 다 쏟아붓는 모습을 나타냅니다."
+          }
+        ]
+      }
+    };
+
+    let currentLevel = 'easy';
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let showClue = false;
+    let answered = false;
+    let userLog = [];
+    let attempts = 0;
+    let studentInfo = { grade: '', cls: '', num: '', name: '' };
+
+    function startLogin() {
+      const grade = document.getElementById('input-grade').value.trim();
+      const cls = document.getElementById('input-class').value.trim();
+      const num = document.getElementById('input-number').value.trim();
+      const name = document.getElementById('input-name').value.trim();
+
+      if (!grade || !cls || !num || !name) {
+        alert("학년, 반, 번호, 이름을 모두 입력해주세요!");
+        return;
+      }
+
+      const confirmMsg = `입력하신 정보가 맞나요?\n\n- ${grade}학년 ${cls}반 ${num}번\n- 이름: ${name}\n\n맞으면 [확인], 다시 수정하려면 [취소]를 눌러주세요.`;
+      
+      if (confirm(confirmMsg)) {
+        studentInfo = { grade, cls, num, name };
+        showScreen('intro-screen');
+      }
+    }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function startGame(level) {
+      currentLevel = level;
+      currentQuestions = database[level].questions;
+      currentIndex = 0;
+      score = 0;
+      userLog = [];
+      
+      document.getElementById('level-badge').textContent = database[level].title;
+      showScreen('quiz-screen');
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = currentQuestions[currentIndex];
+      answered = false;
+      showClue = false;
+      attempts = 0;
+
+      document.getElementById('current-q').textContent = currentIndex + 1;
+      document.getElementById('total-q').textContent = currentQuestions.length;
+      
+      const nextBtn = document.getElementById('next-btn');
+      nextBtn.style.display = 'none';
+      nextBtn.onclick = nextQuestion;
+
+      const feedback = document.getElementById('feedback');
+      feedback.className = 'feedback-box';
+      feedback.innerHTML = '';
+
+      // 본문 렌더링
+      let passageHtml = q.passage.replace("{target}", `<span class="target-word">${q.targetWord}</span>`);
+      q.clues.forEach(clue => {
+        passageHtml = passageHtml.replace(clue, `<span class="clue clue-hidden">${clue}</span>`);
+      });
+      document.getElementById('passage-container').innerHTML = passageHtml;
+
+      // 선택지 렌더링
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+      
+      // 선택지를 랜덤하게 섞기
+      const shuffledOptions = [...q.options].sort(() => Math.random() - 0.5);
+      
+      shuffledOptions.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span><strong>${idx + 1}.</strong></span> ${opt.text}`;
+        btn.onclick = () => selectOption(btn, opt, q);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function toggleClue() {
+      showClue = !showClue;
+      const clues = document.querySelectorAll('.clue');
+      clues.forEach(el => {
+        if (showClue) {
+          el.classList.remove('clue-hidden');
+        } else {
+          el.classList.add('clue-hidden');
+        }
+      });
+    }
+
+    function selectOption(button, option, q) {
+      if (answered) return;
+      answered = true;
+      attempts++;
+
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (!showClue) toggleClue();
+
+      const feedback = document.getElementById('feedback');
+      feedback.classList.add('show');
+
+      const isCorrect = option.isCorrect;
+      
+      // 첫 시도에만 점수와 로그 기록
+      if (attempts === 1) {
+        userLog.push({
+          word: q.targetWord,
+          isCorrect: isCorrect,
+          explanation: q.explanation
+        });
+        if (isCorrect) {
+          score++;
+        }
+      }
+
+      const nextBtn = document.getElementById('next-btn');
+      nextBtn.style.display = 'inline-block';
+
+      if (isCorrect) {
+        button.classList.add('correct');
+        feedback.className = 'feedback-box show feedback-success';
+        feedback.innerHTML = `🎉 <strong>정답입니다!</strong><br>${q.explanation}`;
+        
+        if (currentIndex === currentQuestions.length - 1) {
+          nextBtn.textContent = '최종 탐정 보고서 보기 ➔';
+        } else {
+          nextBtn.textContent = '다음 사건 해결하기 ➔';
+        }
+        nextBtn.onclick = nextQuestion;
+      } else {
+        button.classList.add('wrong');
+        feedback.className = 'feedback-box show feedback-error';
+        feedback.innerHTML = `💡 <strong>오답입니다! 단서를 다시 확인해보세요.</strong>`;
+        
+        nextBtn.textContent = '다시 풀어보기 🔄';
+        nextBtn.onclick = retryQuestion;
+      }
+    }
+
+    function retryQuestion() {
+      answered = false;
+      document.getElementById('next-btn').style.display = 'none';
+      
+      const feedback = document.getElementById('feedback');
+      feedback.className = 'feedback-box';
+      feedback.innerHTML = '';
+      
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => {
+        // 이미 선택했던 오답은 비활성화 상태 유지
+        if (!btn.classList.contains('wrong')) {
+          btn.disabled = false;
+        }
+      });
+    }
+
+    function nextQuestion() {
+      if (currentIndex < currentQuestions.length - 1) {
+        currentIndex++;
+        renderQuestion();
+      } else {
+        showFinalResult();
+      }
+    }
+
+    function showFinalResult() {
+      showScreen('result-screen');
+      
+      document.getElementById('student-info-text').textContent = 
+        `${studentInfo.grade}학년 ${studentInfo.cls}반 ${studentInfo.num}번 ${studentInfo.name} 탐정 요원`;
+
+      const levelNames = {
+        easy: "초급",
+        medium: "중급",
+        hard: "고급"
+      };
+      const level = levelNames[currentLevel];
+      const percentage = Math.round((score / currentQuestions.length) * 100);
+      const resultText = `${percentage}%`;
+
+      const payload = {
+        grade: studentInfo.grade,
+        cls: studentInfo.cls,
+        num: studentInfo.num,
+        name: studentInfo.name,
+        level: level,
+        resultText: resultText
+      };
+
+      const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxdZ3iNAYiAVXFZnpW373t-Be0YLrynneh2MeOJgS1ckF7PvGfo2KGK9-GIa2VbFoqjA/exec";
+
+      // 대기 화면 없이 백그라운드에서 바로 전송
+      fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify(payload)
+      }).catch(console.error);
+    }
+
+    function restartGame() {
+      showScreen('intro-screen');
+    }
+  </script>
+</body>
+</html>
